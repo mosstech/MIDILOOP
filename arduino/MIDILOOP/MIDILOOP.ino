@@ -759,6 +759,7 @@ void navigateSettings() {
 }
 
 void updateSettingsItem(int screen) {
+  
   switch (screen) {
     case 0:
       lcd.clear();
@@ -772,42 +773,45 @@ void updateSettingsItem(int screen) {
       lcd.setCursor(0, 0);
       lcd.print("Bars:           ");
       lcd.setCursor(0,1);
-      lcd.print(getLCDString(settings.bars));
+      lcd.print("              " + intToString_2(settings.bars));
       break;
     case 2:
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print("Quantize:       ");
       lcd.setCursor(0, 1);
-      lcd.print("            1/" + String(settings.quantizeDenominator));
+      if (String(settings.quantizeDenominator).length() == 1)
+        lcd.print("             1/" + String(settings.quantizeDenominator));
+      else if (String(settings.quantizeDenominator).length() == 2)
+        lcd.print("            1/" + String(settings.quantizeDenominator));
       break;
     case 3:
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print("Track 1 Channel:");
       lcd.setCursor(0, 1);
-      lcd.print(getLCDString(settings.trackChannel[0]));
+      lcd.print("              " + intToString_2(settings.trackChannel[0]));
       break;
     case 4:
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print("Track 2 Channel:");
       lcd.setCursor(0, 1);
-      lcd.print(getLCDString(settings.trackChannel[1]));
+      lcd.print("              " + intToString_2(settings.trackChannel[1]));
       break;
     case 5:
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print("Track 3 Channel:");
       lcd.setCursor(0, 1);
-      lcd.print(String(settings.trackChannel[2]));
+      lcd.print("              " + intToString_2(settings.trackChannel[2]));
       break;
     case 6:
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print("Track 4 Channel:");
       lcd.setCursor(0, 1);
-      lcd.print(getLCDString(settings.trackChannel[3]));
+      lcd.print("              " + intToString_2(settings.trackChannel[3]));
       break;
     default:
       settingsScreen = 0; //if invalid screen, return to home
@@ -820,13 +824,16 @@ void updateSettingsItem(int screen) {
   }
 }
 
-String getLCDString(int val) {
-  if (val >= 0 && val < 10)
-    return "               " + String(val);
-  else if (val >= 10 && val < 100)
-    return "              " + String(val);
-  else
-    return "String Error";
+String intToString_2(int val) {
+
+  String strVal = String(val);
+
+  if (strVal.length() == 1){
+    strVal = "0" + strVal;
+  }
+  else if (strVal.length() == 2){
+    strVal = strVal;
+  }
 }
 
 void updateSettingsValue(int screen, bool navUp) {
@@ -848,7 +855,7 @@ void updateSettingsValue(int screen, bool navUp) {
         }
       }
       lcd.setCursor(0, 1);
-      lcd.print(getLCDString(settings.bars));
+      lcd.print("              " + intToString_2(settings.bars));
       break;
 
     case 2: //quantize
@@ -863,7 +870,7 @@ void updateSettingsValue(int screen, bool navUp) {
         }
       }
       lcd.setCursor(0, 1);
-      lcd.print(getLCDString(settings.quantizeDenominator));
+      lcd.print("              " + intToString_2(settings.quantizeDenominator));
       break;
 
     case 3: //track 1 channel
@@ -879,7 +886,7 @@ void updateSettingsValue(int screen, bool navUp) {
         }
       }
       lcd.setCursor(0, 1);
-      lcd.print(getLCDString(settings.trackChannel[0]));
+      lcd.print("              " + intToString_2(settings.trackChannel[0]));
       break;
 
     case 4: //track 2 channel
@@ -895,7 +902,7 @@ void updateSettingsValue(int screen, bool navUp) {
         }
       }
       lcd.setCursor(0, 1);
-      lcd.print(getLCDString(settings.trackChannel[1]));
+      lcd.print("              " + intToString_2(settings.trackChannel[1]));
       break;
     case 5: //track 3 channel
 
@@ -910,7 +917,7 @@ void updateSettingsValue(int screen, bool navUp) {
         }
       }
       lcd.setCursor(0, 1);
-      lcd.print(getLCDString(settings.trackChannel[2]));
+      lcd.print("              " + intToString_2(settings.trackChannel[2]));
       break;
 
     case 6: //track 4 channel
@@ -926,7 +933,7 @@ void updateSettingsValue(int screen, bool navUp) {
         }
       }
       lcd.setCursor(0, 1);
-      lcd.print(getLCDString(settings.trackChannel[3]));
+      lcd.print("              " + intToString_2(settings.trackChannel[3]));
       break;
 
     default:
