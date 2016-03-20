@@ -24,9 +24,9 @@
 #define BUTTON_TRACK_2_PIN 6
 #define BUTTON_TRACK_3_PIN 7
 #define BUTTON_TRACK_4_PIN 8
-#define BUTTON_RECORD_PIN 17
-#define BUTTON_PLAY_PIN 16
-#define BUTTON_STOP_PIN 15
+#define BUTTON_RECORD_PIN 9
+#define BUTTON_PLAY_PIN 10
+#define BUTTON_STOP_PIN 11
 #define CHAR_LCD_RS_PIN 12
 #define CHAR_LCD_EN_PIN 13
 #define CHAR_LCD_DB4_PIN 17
@@ -36,19 +36,20 @@
 
 
 //Assign remote pins
-#define RECORD_LED_TRACK_1_PIN 0
-#define RECORD_LED_TRACK_2_PIN 1
-#define RECORD_LED_TRACK_3_PIN 2
-#define RECORD_LED_TRACK_4_PIN 3
-#define PLAY_LED_TRACK_1_PIN 4
-#define PLAY_LED_TRACK_2_PIN 5
-#define PLAY_LED_TRACK_3_PIN 6
-#define PLAY_LED_TRACK_4_PIN 7
+#define IO_TEST_PIN 0
+#define RECORD_LED_TRACK_1_PIN 8
+#define RECORD_LED_TRACK_2_PIN 9
+#define RECORD_LED_TRACK_3_PIN 10
+#define RECORD_LED_TRACK_4_PIN 11
+#define PLAY_LED_TRACK_1_PIN 12
+#define PLAY_LED_TRACK_2_PIN 13
+#define PLAY_LED_TRACK_3_PIN 14
+#define PLAY_LED_TRACK_4_PIN 15
 
-#define BUTTON_LCD_UP_PIN 12
-#define BUTTON_LCD_DOWN_PIN 13
-#define BUTTON_LCD_LEFT_PIN 14
-#define BUTTON_LCD_RIGHT_PIN 15
+#define BUTTON_LCD_UP_PIN 4
+#define BUTTON_LCD_DOWN_PIN 5
+#define BUTTON_LCD_LEFT_PIN 6
+#define BUTTON_LCD_RIGHT_PIN 7
 
 //Assign EEPROM registers
 #define SETTINGS_ADDRESS_BARS 0
@@ -128,8 +129,6 @@ void setup() {
   Wire.begin(); //start I2C
 
   IO.initialize(); // set all registers to default;
-  IO.portMode(0, 0b0000000000000000); // set all pins on chip 0 to output
-
 
   pinMode(BUTTON_TRACK_1_PIN, INPUT);
   pinMode(BUTTON_TRACK_2_PIN, INPUT);
@@ -144,31 +143,41 @@ void setup() {
   pinMode(PLAY_LED_TRACK_3_PIN, OUTPUT);
   pinMode(PLAY_LED_TRACK_4_PIN, OUTPUT);
 
-
-
+  IO.pinMode(BUTTON_LCD_UP_PIN,INPUT);
+  IO.pinMode(BUTTON_LCD_DOWN_PIN,INPUT);
+  IO.pinMode(BUTTON_LCD_LEFT_PIN,INPUT);
+  IO.pinMode(BUTTON_LCD_RIGHT_PIN,INPUT);
+  IO.pinMode(RECORD_LED_TRACK_1_PIN, OUTPUT);
+  IO.pinMode(RECORD_LED_TRACK_2_PIN, OUTPUT);
+  IO.pinMode(RECORD_LED_TRACK_3_PIN, OUTPUT);
+  IO.pinMode(RECORD_LED_TRACK_4_PIN, OUTPUT);
+  IO.pinMode(PLAY_LED_TRACK_1_PIN, OUTPUT);
+  IO.pinMode(PLAY_LED_TRACK_2_PIN, OUTPUT);
+  IO.pinMode(PLAY_LED_TRACK_3_PIN, OUTPUT);
+  IO.pinMode(PLAY_LED_TRACK_4_PIN, OUTPUT);
+  IO.pinMode(IO_TEST_PIN, OUTPUT);
+  
   IO.digitalWrite(RECORD_LED_TRACK_1_PIN, LOW);
   IO.digitalWrite(RECORD_LED_TRACK_2_PIN, LOW);
   IO.digitalWrite(RECORD_LED_TRACK_3_PIN, LOW);
   IO.digitalWrite(RECORD_LED_TRACK_4_PIN, LOW);
-
   IO.digitalWrite(PLAY_LED_TRACK_1_PIN, LOW);
   IO.digitalWrite(PLAY_LED_TRACK_2_PIN, LOW);
   IO.digitalWrite(PLAY_LED_TRACK_3_PIN, LOW);
   IO.digitalWrite(PLAY_LED_TRACK_4_PIN, LOW);
-
+  IO.digitalWrite(IO_TEST_PIN, HIGH);
+  
   // Attach the interrupt to send the MIDI clock and start the timer
   Timer1.initialize(intervalMicroSeconds);
   Timer1.setPeriod(calculateIntervalMicroSecs(bpm));
   Timer1.attachInterrupt(sendClockPulse);
 
   loadSettings();
+  
+  lcd.begin(16,2);
+  updateSettingsItem(settingsScreen);
 
-  lcd.begin(16, 2);
-  lcd.setCursor(0, 0);
-  lcd.print("    MOSSTECH    ");
-  lcd.setCursor(0, 1);
-  lcd.print("    MIDILOOP    ");
-
+  
 
 }
 
@@ -631,10 +640,10 @@ void readInputs() {
   playButtonState = digitalRead(BUTTON_PLAY_PIN);
   stopButtonState = digitalRead(BUTTON_STOP_PIN);
 
-  settingsUpButtonState = digitalRead(BUTTON_LCD_UP_PIN);
-  settingsDownButtonState = digitalRead(BUTTON_LCD_DOWN_PIN);
-  settingsLeftButtonState = digitalRead(BUTTON_LCD_LEFT_PIN);
-  settingsRightButtonState = digitalRead(BUTTON_LCD_RIGHT_PIN);
+  settingsUpButtonState = IO.digitalRead(BUTTON_LCD_UP_PIN);
+  settingsDownButtonState = IO.digitalRead(BUTTON_LCD_DOWN_PIN);
+  settingsLeftButtonState = IO.digitalRead(BUTTON_LCD_LEFT_PIN);
+  settingsRightButtonState = IO.digitalRead(BUTTON_LCD_RIGHT_PIN);
 }
 
 void writeOutputs() {
@@ -731,12 +740,12 @@ void writeOutputs() {
 void navigateSettings() {
   if (settingsLeftButtonState == true && settingsLeftButtonState_LS == false) {
     if (settingsScreen > 0)
-      settingsScreen++;
+      settingsScreen--;
     updateSettingsItem(settingsScreen);
   }
   else if (settingsRightButtonState == true && settingsRightButtonState_LS == false) {
     if (settingsScreen < 6)
-      settingsScreen--;
+      settingsScreen++;
     updateSettingsItem(settingsScreen);
   }
   else if (settingsUpButtonState == true && settingsUpButtonState_LS == false) {
@@ -753,53 +762,57 @@ void updateSettingsItem(int screen) {
   switch (screen) {
     case 0:
       lcd.clear();
-      lcd.home();
+      lcd.setCursor(0, 0);
       lcd.print("    MOSSTECH    ");
-      lcd.setCursor(0, 1);
+      lcd.setCursor(0,1);
       lcd.print("    MIDILOOP    ");
       break;
     case 1:
       lcd.clear();
-      lcd.home();
+      lcd.setCursor(0, 0);
       lcd.print("Bars:           ");
-      lcd.setCursor(0, 1);
-      lcd.print(settings.bars);
+      lcd.setCursor(0,1);
+      lcd.print(getLCDString(settings.bars));
       break;
     case 2:
       lcd.clear();
-      lcd.home();
+      lcd.setCursor(0, 0);
       lcd.print("Quantize:       ");
       lcd.setCursor(0, 1);
-      lcd.print("1/" + String(settings.quantizeDenominator));
+      lcd.print("            1/" + String(settings.quantizeDenominator));
       break;
     case 3:
       lcd.clear();
-      lcd.home();
+      lcd.setCursor(0, 0);
       lcd.print("Track 1 Channel:");
       lcd.setCursor(0, 1);
-      lcd.print(String(settings.trackChannel[0]));
+      lcd.print(getLCDString(settings.trackChannel[0]));
+      break;
     case 4:
       lcd.clear();
-      lcd.home();
+      lcd.setCursor(0, 0);
       lcd.print("Track 2 Channel:");
       lcd.setCursor(0, 1);
-      lcd.print(String(settings.trackChannel[1]));
+      lcd.print(getLCDString(settings.trackChannel[1]));
+      break;
     case 5:
       lcd.clear();
-      lcd.home();
+      lcd.setCursor(0, 0);
       lcd.print("Track 3 Channel:");
       lcd.setCursor(0, 1);
       lcd.print(String(settings.trackChannel[2]));
+      break;
     case 6:
       lcd.clear();
-      lcd.home();
+      lcd.setCursor(0, 0);
       lcd.print("Track 4 Channel:");
       lcd.setCursor(0, 1);
-      lcd.print(String(settings.trackChannel[3]));
+      lcd.print(getLCDString(settings.trackChannel[3]));
+      break;
     default:
       settingsScreen = 0; //if invalid screen, return to home
       lcd.clear();
-      lcd.home();
+      lcd.setCursor(0, 0);
       lcd.print("    MOSSTECH    ");
       lcd.setCursor(0, 1);
       lcd.print("    MIDILOOP    ");
@@ -845,7 +858,7 @@ void updateSettingsValue(int screen, bool navUp) {
         }
       }
       else {
-        if (settings.bars >= 8) {
+        if (settings.quantizeDenominator >= 8) {
           settings.quantizeDenominator = settings.quantizeDenominator / 2;
         }
       }
